@@ -173,7 +173,7 @@ def simulateOptIndices(qH,cH,qL,delta,lam, pureRegime,T):
 
 
 '''THE REMAINING IS THE NECESSARY FUNCTIONS TO ANALYZE THE FULL SIMULATION'''
-'''MANY OF THE FUNCTIONS REPLACE THE ABOVE'''
+'''Would really like to speed up the comptation - I'm not sure there is any easy way because the number of possible prices increases very fast (expoentially)'''
 def equilibrium(qH,cH,qL,delta,lam,T):
     def optLast(params):
         '''return breakeven beleif in last period'''
