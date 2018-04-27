@@ -296,7 +296,8 @@ def equilibrium(qH,cH,qL,delta,lam,T):
     #Period 0 is done
     #Period 1 - determine available prices and the beliefs that can be generated with them:
     for t in range(1,T+1):
-
+        if t%50 == 0:
+            print(t)
         potentialPolicies = [(delta*x[0],x[1] ) for x in zip(criticalValuesSeller[t-1],criticalBeliefs[t-1]) if x[1]>0 and delta*x[0]<cH]
         potentialPolicies.append((0,None))
         potentialPolicies.append((cH,None))
