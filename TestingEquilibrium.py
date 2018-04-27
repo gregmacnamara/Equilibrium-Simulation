@@ -36,9 +36,7 @@ if __name__ == '__main__':
 	# breakpointsDict=dict()
 	# optThresholdsDict = dict()
 	# breakpointValuesDict = dict()
-	# thresholdResults = eqSim.simulateOptIndices(qH,cH,qL,delta,lam, True,T+1)    
+	# thresholdResults = eqSim.simulateOptIndices(qH,cH,qL,delta,lam, True,T+1)
 	# # optThresholdsDict[params], breakpointsDict[params], breakpointValuesDict[params] =thresholdResults
 	# file_pi = open('thresholdResults.obj', 'w')
 	# pickle.dump(thresholdResults, file_pi)
-
-
