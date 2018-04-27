@@ -23,117 +23,119 @@ def nu(z,params):
     qH,qL,cH,lam,delta = params
     return (1-qH)*z + (1-qL)*(1-z)
 
-'''test'''
-def calcBreakpoints(t,params,optThresholds,breakpoints,breakpointValues, pureRegime):
-    '''We know that the value function is always piecewise lienar. Therefore, the only values we need to save to efficiently
-    calculate the value function at an arbitraty belief is the points at which the policy changes -
-    this function calculates these points'''
-    if t==0:
-        return [0,optLast(params,optThresholds,breakpoints,breakpointValues, pureRegime),1]
-    else:
-        nextBreakpoints = breakpoints[params][t-1]
-        threshold = optThresholds[params][t]
-        currentBreakpoints =[0,threshold,1]
-        roundedSet = set()
-        for x in nextBreakpoints:
-            #DO I NEED BOTH?
-            if sigmaInv(x,params) >= threshold and round(sigmaInv(x,params),10)<.99 and round(sigmaInv(x,params),10) not in roundedSet:
-                currentBreakpoints.append(sigmaInv(x,params))
-                roundedSet.add(round(sigmaInv(x,params),10))
-            if phiInv(x,params)>= threshold and round(sigmaInv(x,params),10)<.99 and round(phiInv(x,params),10) not in roundedSet:
-                currentBreakpoints.append(phiInv(x,params))
-                roundedSet.add(round(phiInv(x,params),10))
-        return currentBreakpoints
 
-def calcThreshold(t,params,optThresholds,breakpoints,breakpointValues, pureRegime):
-    '''this function finds the point at which the derivative of changing the threshold is equal to 0.
-    Thus it finds the optimal threshold given the calculation of the derivative'''
-    if t==0:
-        return optLast(params)
-    if t>0:
-        try:
-            return sp.optimize.brentq(derivativeOfObjective,0,optThresholds[params][t-1],args = (params,t,optThresholds,breakpoints,breakpointValues,pureRegime))
-        except ValueError:
-            if optThresholds[params][t-1]>0:
-                return optThresholds[params][t-1]
-            else:
-                return 0
-#             print(t)
-#             print(derivativeOfObjective(0,params,t,optThresholds,breakpoints,breakpointValues))
-#             print(derivativeOfObjective(optThresholds[params][t-1],params,t,optThresholds,breakpoints,breakpointValues))
-#             sys.exit(1)
-
-
-def derivativeOfObjective(x,params,t,optThresholds,breakpoints,breakpointValues, pureRegime):
-    '''this uses our analytical results to characterize the derivative of teh objective with respect to the threshold in any given period'''
-    qH,qL,cH,lam,delta = params
-#     If we want to use the derivative that is correct in the pure observational regime
-    if pureRegime:
-#         print(1)
-        return sum([delta**i for i in range(t+1)])*lam -eta(x,params)+cH-\
-                delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)- \
-                delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)
-    if qH-cH>lam>=qL:
-#         print(2)
-        return sum([delta**i for i in range(t+1)])*lam -eta(x,params)+cH \
-                    -delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) \
-                    -nu(x,params)*sum([delta**i for i in range(1,t+1)])*lam
-    elif qH-cH>qL>lam:
-#         print(3)
-
-        return (1-x/optThresholds[params][t-1])*sum([delta**i for i in range(t+1)])*qL \
-                    + x/optThresholds[params][t-1]*(lam+delta*U(params,t-1,optThresholds[params][t-1],optThresholds,breakpoints,breakpointValues,pureRegime))  \
-                    -eta(x,params)+cH -delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime ) \
-                    -delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)
-
-def optLast(params,optThresholds,breakpoints,breakpointValues, pureRegime = False):
-    '''simply calculates the known breakeven point in the last period given parameters'''
-    qH,qL,cH,lam,delta = params
-
-    if (qH-cH>lam>qL) or pureRegime:
-#         print ('pure')
-        return (lam+cH-qL)/(qH-qL)
-    elif qH-cH>qL>lam:
-#         print ('mixed')
-        return cH/(qH-lam)
-
-def breakpointValue(params,t,optThresholds,breakpoints,breakpointValues, pureRegime):
-    '''calculates and stores the value at each breakpoint to allow for linear interpolation'''
-    qH,qL,cH,lam,delta = params
-    pointsToCalculate = breakpoints[params][t]
-    calculatedBreakpointValues = []
-    for x in pointsToCalculate:
-        if pureRegime or (qH-cH>lam>qL):
-            if x>=optThresholds[params][t]:
-                calculatedBreakpointValues.append(eta(x,params)-cH + delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) \
-                                        + delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) )
-            else:
-                calculatedBreakpointValues.append(lam+delta*U(params,t-1,x,optThresholds,breakpoints,breakpointValues,pureRegime))
-        elif qH-cH>qL>lam:
-            if t==0:
-                calculatedBreakpointValues.append(max( (1-x)*qL+x*qH -cH, (1-x)*qL+x*lam ))
-            elif t>0:
-                if x>=optThresholds[params][t]:
-                    result = eta(x,params)-cH + delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) \
-                                            + delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)
-                    calculatedBreakpointValues.append(result)
-                else:
-                    result = (1-x/optThresholds[params][t-1])*sum([qL*delta**i for i in range(t+1)] ) + \
-                                x/optThresholds[params][t-1]*(lam + delta*U(params,t-1,optThresholds[params][t-1],optThresholds,breakpoints,breakpointValues,pureRegime) )
-                    calculatedBreakpointValues.append(result)
-    return calculatedBreakpointValues
-
-def U(params,t,x,optThresholds,breakpoints,breakpointValues, pureRegime):
-    '''the Buyers value function. It either returns 0 as a terminal condition or interpolates the value between known values of a breakpoint '''
-    if t==-1:
-        return 0
-    else:
-        try:
-            return sp.interpolate.interp1d(breakpoints[params][t],breakpointValues[params][t],kind='linear')(x)/1
-        except TypeError:
-            print(x)
-            sys.exit('Problem with U')
 def simulateOptIndices(qH,cH,qL,delta,lam, pureRegime,T):
+    '''calculating the threhsold assuming that cH is optimal every where it is optimal at beliefs above the next periods threhsold'''
+    '''This assumption is right someimtes and wrong someitmes - mainly it's right if qL-cH>lam or delta = 1'''
+    def calcBreakpoints(t,params,optThresholds,breakpoints,breakpointValues, pureRegime):
+        '''We know that the value function is always piecewise lienar. Therefore, the only values we need to save to efficiently
+        calculate the value function at an arbitraty belief is the points at which the policy changes -
+        this function calculates these points'''
+        if t==0:
+            return [0,optLast(params,optThresholds,breakpoints,breakpointValues, pureRegime),1]
+        else:
+            nextBreakpoints = breakpoints[params][t-1]
+            threshold = optThresholds[params][t]
+            currentBreakpoints =[0,threshold,1]
+            roundedSet = set()
+            for x in nextBreakpoints:
+                #DO I NEED BOTH?
+                if sigmaInv(x,params) >= threshold and round(sigmaInv(x,params),10)<.99 and round(sigmaInv(x,params),10) not in roundedSet:
+                    currentBreakpoints.append(sigmaInv(x,params))
+                    roundedSet.add(round(sigmaInv(x,params),10))
+                if phiInv(x,params)>= threshold and round(sigmaInv(x,params),10)<.99 and round(phiInv(x,params),10) not in roundedSet:
+                    currentBreakpoints.append(phiInv(x,params))
+                    roundedSet.add(round(phiInv(x,params),10))
+            return currentBreakpoints
+
+    def calcThreshold(t,params,optThresholds,breakpoints,breakpointValues, pureRegime):
+        '''this function finds the point at which the derivative of changing the threshold is equal to 0.
+        Thus it finds the optimal threshold given the calculation of the derivative'''
+        if t==0:
+            return optLast(params)
+        if t>0:
+            try:
+                return sp.optimize.brentq(derivativeOfObjective,0,optThresholds[params][t-1],args = (params,t,optThresholds,breakpoints,breakpointValues,pureRegime))
+            except ValueError:
+                if optThresholds[params][t-1]>0:
+                    return optThresholds[params][t-1]
+                else:
+                    return 0
+    #             print(t)
+    #             print(derivativeOfObjective(0,params,t,optThresholds,breakpoints,breakpointValues))
+    #             print(derivativeOfObjective(optThresholds[params][t-1],params,t,optThresholds,breakpoints,breakpointValues))
+    #             sys.exit(1)
+
+
+    def derivativeOfObjective(x,params,t,optThresholds,breakpoints,breakpointValues, pureRegime):
+        '''this uses our analytical results to characterize the derivative of teh objective with respect to the threshold in any given period'''
+        qH,qL,cH,lam,delta = params
+    #     If we want to use the derivative that is correct in the pure observational regime
+        if pureRegime:
+    #         print(1)
+            return sum([delta**i for i in range(t+1)])*lam -eta(x,params)+cH-\
+                    delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)- \
+                    delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)
+        if qH-cH>lam>=qL:
+    #         print(2)
+            return sum([delta**i for i in range(t+1)])*lam -eta(x,params)+cH \
+                        -delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) \
+                        -nu(x,params)*sum([delta**i for i in range(1,t+1)])*lam
+        elif qH-cH>qL>lam:
+    #         print(3)
+
+            return (1-x/optThresholds[params][t-1])*sum([delta**i for i in range(t+1)])*qL \
+                        + x/optThresholds[params][t-1]*(lam+delta*U(params,t-1,optThresholds[params][t-1],optThresholds,breakpoints,breakpointValues,pureRegime))  \
+                        -eta(x,params)+cH -delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime ) \
+                        -delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)
+
+    def optLast(params,optThresholds,breakpoints,breakpointValues, pureRegime = False):
+        '''simply calculates the known breakeven point in the last period given parameters'''
+        qH,qL,cH,lam,delta = params
+
+        if (qH-cH>lam>qL) or pureRegime:
+    #         print ('pure')
+            return (lam+cH-qL)/(qH-qL)
+        elif qH-cH>qL>lam:
+    #         print ('mixed')
+            return cH/(qH-lam)
+
+    def breakpointValue(params,t,optThresholds,breakpoints,breakpointValues, pureRegime):
+        '''calculates and stores the value at each breakpoint to allow for linear interpolation'''
+        qH,qL,cH,lam,delta = params
+        pointsToCalculate = breakpoints[params][t]
+        calculatedBreakpointValues = []
+        for x in pointsToCalculate:
+            if pureRegime or (qH-cH>lam>qL):
+                if x>=optThresholds[params][t]:
+                    calculatedBreakpointValues.append(eta(x,params)-cH + delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) \
+                                            + delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) )
+                else:
+                    calculatedBreakpointValues.append(lam+delta*U(params,t-1,x,optThresholds,breakpoints,breakpointValues,pureRegime))
+            elif qH-cH>qL>lam:
+                if t==0:
+                    calculatedBreakpointValues.append(max( (1-x)*qL+x*qH -cH, (1-x)*qL+x*lam ))
+                elif t>0:
+                    if x>=optThresholds[params][t]:
+                        result = eta(x,params)-cH + delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) \
+                                                + delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)
+                        calculatedBreakpointValues.append(result)
+                    else:
+                        result = (1-x/optThresholds[params][t-1])*sum([qL*delta**i for i in range(t+1)] ) + \
+                                    x/optThresholds[params][t-1]*(lam + delta*U(params,t-1,optThresholds[params][t-1],optThresholds,breakpoints,breakpointValues,pureRegime) )
+                        calculatedBreakpointValues.append(result)
+        return calculatedBreakpointValues
+
+    def U(params,t,x,optThresholds,breakpoints,breakpointValues, pureRegime):
+        '''the Buyers value function. It either returns 0 as a terminal condition or interpolates the value between known values of a breakpoint '''
+        if t==-1:
+            return 0
+        else:
+            try:
+                return sp.interpolate.interp1d(breakpoints[params][t],breakpointValues[params][t],kind='linear')(x)/1
+            except TypeError:
+                print(x)
+                sys.exit('Problem with U')
     '''simulate the system given the parameters '''
 #     These will be dics that save everything
 
