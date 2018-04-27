@@ -174,7 +174,7 @@ def simulateOptIndices(qH,cH,qL,delta,lam, pureRegime,T):
 
 '''THE REMAINING IS THE NECESSARY FUNCTIONS TO ANALYZE THE FULL SIMULATION'''
 '''Would really like to speed up the comptation - I'm not sure there is any easy way because the number of possible prices increases very fast (expoentially)'''
-def equilibrium(qH,cH,qL,delta,lam,T):
+def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
     def optLast(params):
         '''return breakeven beleif in last period'''
         if qH-cH>lam>qL:
@@ -266,38 +266,47 @@ def equilibrium(qH,cH,qL,delta,lam,T):
                 location = np.searchsorted(criticalBeliefs,belief, 'right')
                 return criticalValuesSeller[location]
 #Period T
-    params = qH,qL,cH,lam,delta
-    optPrices = [0,cH]
-    value = list()
-    criticalBeliefs = dict()
-    optPolicy = dict()
-    criticalValues = dict()
-    criticalValuesSeller=dict()
+    #Allow for caclulations to not start at time 0 but to build on each other
+    if equilibriumResults == None:
+        params = qH,qL,cH,lam,delta
+        optPrices = [0,cH]
+        value = list()
+        criticalBeliefs = dict()
+        optPolicy = dict()
+        criticalValues = dict()
+        criticalValuesSeller=dict()
 
-    # Terminal Conditions:
-    criticalValues[-1] = []
-    criticalValuesSeller[-1] = []
-    optPolicy[-1] = []
-    criticalBeliefs[-1] = []
+        # Terminal Conditions:
+        criticalValues[-1] = []
+        criticalValuesSeller[-1] = []
+        optPolicy[-1] = []
+        criticalBeliefs[-1] = []
 
-    #Last Period: Offer 0 or CH depending on optLast Beliefs
-    criticalBeliefs[0]= [0]
-    optPolicy[0]= [(0,None)]
+        #Last Period: Offer 0 or CH depending on optLast Beliefs
+        criticalBeliefs[0]= [0]
+        optPolicy[0]= [(0,None)]
 
-    criticalBeliefs[0].append(optLast(params))
-    optPolicy[0].append((0,1))
+        criticalBeliefs[0].append(optLast(params))
+        optPolicy[0].append((0,1))
 
-    criticalBeliefs[0].append(1)
-    optPolicy[0].append((cH,None))
-
-
-    criticalValues[0] = [calcValueBuyer(params,0,policy,belief,criticalBeliefs[-1],criticalValues[-1]) for policy, belief in zip(optPolicy[0],criticalBeliefs[0])]
+        criticalBeliefs[0].append(1)
+        optPolicy[0].append((cH,None))
 
 
-    criticalValuesSeller[0] = [calcValueSeller(params,0,policy,belief,criticalBeliefs[-1],criticalValuesSeller[-1]) for policy, belief in zip(optPolicy[0],criticalBeliefs[0])]
-    #Period 0 is done
-    #Period 1 - determine available prices and the beliefs that can be generated with them:
-    for t in range(1,T+1):
+        criticalValues[0] = [calcValueBuyer(params,0,policy,belief,criticalBeliefs[-1],criticalValues[-1]) for policy, belief in zip(optPolicy[0],criticalBeliefs[0])]
+
+
+        criticalValuesSeller[0] = [calcValueSeller(params,0,policy,belief,criticalBeliefs[-1],criticalValuesSeller[-1]) for policy, belief in zip(optPolicy[0],criticalBeliefs[0])]
+        firstT = 1
+    else:
+        criticalBeliefs, optPolicy, criticalValues,criticalValuesSeller = equilibriumResults
+        keys = list()
+        for key,item in criticalBeliefs.items():
+            keys.append(key)
+        firstT = np.max(keys)
+        #Period 0 is done
+        #Period 1 - determine available prices and the beliefs that can be generated with them:
+    for t in range(firstT,T+1):
         if t%50 == 0:
             print(t)
         potentialPolicies = [(delta*x[0],x[1] ) for x in zip(criticalValuesSeller[t-1],criticalBeliefs[t-1]) if x[1]>0 and delta*x[0]<cH]
