@@ -23,10 +23,10 @@ def nu(z,params):
     qH,qL,cH,lam,delta = params
     return (1-qH)*z + (1-qL)*(1-z)
 
-
+'''test'''
 def calcBreakpoints(t,params,optThresholds,breakpoints,breakpointValues, pureRegime):
     '''We know that the value function is always piecewise lienar. Therefore, the only values we need to save to efficiently
-    calculate the value function at an arbitraty belief is the points at which the policy changes - 
+    calculate the value function at an arbitraty belief is the points at which the policy changes -
     this function calculates these points'''
     if t==0:
         return [0,optLast(params,optThresholds,breakpoints,breakpointValues, pureRegime),1]
@@ -44,7 +44,7 @@ def calcBreakpoints(t,params,optThresholds,breakpoints,breakpointValues, pureReg
                 currentBreakpoints.append(phiInv(x,params))
                 roundedSet.add(round(phiInv(x,params),10))
         return currentBreakpoints
-    
+
 def calcThreshold(t,params,optThresholds,breakpoints,breakpointValues, pureRegime):
     '''this function finds the point at which the derivative of changing the threshold is equal to 0.
     Thus it finds the optimal threshold given the calculation of the derivative'''
@@ -63,7 +63,7 @@ def calcThreshold(t,params,optThresholds,breakpoints,breakpointValues, pureRegim
 #             print(derivativeOfObjective(optThresholds[params][t-1],params,t,optThresholds,breakpoints,breakpointValues))
 #             sys.exit(1)
 
-    
+
 def derivativeOfObjective(x,params,t,optThresholds,breakpoints,breakpointValues, pureRegime):
     '''this uses our analytical results to characterize the derivative of teh objective with respect to the threshold in any given period'''
     qH,qL,cH,lam,delta = params
@@ -77,7 +77,7 @@ def derivativeOfObjective(x,params,t,optThresholds,breakpoints,breakpointValues,
 #         print(2)
         return sum([delta**i for i in range(t+1)])*lam -eta(x,params)+cH \
                     -delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) \
-                    -nu(x,params)*sum([delta**i for i in range(1,t+1)])*lam 
+                    -nu(x,params)*sum([delta**i for i in range(1,t+1)])*lam
     elif qH-cH>qL>lam:
 #         print(3)
 
@@ -85,7 +85,7 @@ def derivativeOfObjective(x,params,t,optThresholds,breakpoints,breakpointValues,
                     + x/optThresholds[params][t-1]*(lam+delta*U(params,t-1,optThresholds[params][t-1],optThresholds,breakpoints,breakpointValues,pureRegime))  \
                     -eta(x,params)+cH -delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime ) \
                     -delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)
-                    
+
 def optLast(params,optThresholds,breakpoints,breakpointValues, pureRegime = False):
     '''simply calculates the known breakeven point in the last period given parameters'''
     qH,qL,cH,lam,delta = params
@@ -115,7 +115,7 @@ def breakpointValue(params,t,optThresholds,breakpoints,breakpointValues, pureReg
             elif t>0:
                 if x>=optThresholds[params][t]:
                     result = eta(x,params)-cH + delta*eta(x,params)*U(params,t-1,sigma(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) \
-                                            + delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime) 
+                                            + delta*nu(x,params)*U(params,t-1,phi(x,params),optThresholds,breakpoints,breakpointValues,pureRegime)
                     calculatedBreakpointValues.append(result)
                 else:
                     result = (1-x/optThresholds[params][t-1])*sum([qL*delta**i for i in range(t+1)] ) + \
@@ -137,7 +137,7 @@ def simulateOptIndices(qH,cH,qL,delta,lam, pureRegime,T):
     '''simulate the system given the parameters '''
 #     These will be dics that save everything
 
-    
+
 #     for lam in lams:
     params = qH,qL,cH,lam,delta
 
@@ -148,12 +148,12 @@ def simulateOptIndices(qH,cH,qL,delta,lam, pureRegime,T):
     breakpoints = dict()
     optThresholds = dict()
     breakpointValues = dict()
-    
+
     breakpoints[params] = dict()
-    breakpoints[params][0] = calcBreakpoints(0,params,optThresholds,breakpoints,breakpointValues, pureRegime) 
+    breakpoints[params][0] = calcBreakpoints(0,params,optThresholds,breakpoints,breakpointValues, pureRegime)
 
     optThresholds[params] = {}
-    optThresholds[params][0]= optLast(params,optThresholds,breakpoints,breakpointValues, pureRegime)    
+    optThresholds[params][0]= optLast(params,optThresholds,breakpoints,breakpointValues, pureRegime)
     breakpointValues[params] = dict()
     breakpointValues[params][0] = breakpointValue(params,0,optThresholds,breakpoints,breakpointValues, pureRegime)
 #         print(breakpointValues)
@@ -163,7 +163,7 @@ def simulateOptIndices(qH,cH,qL,delta,lam, pureRegime,T):
             pass
         else:
             optThresholds[params][t] = calcThreshold(t,params,optThresholds,breakpoints,breakpointValues, pureRegime)
-            breakpoints[params][t] = calcBreakpoints(t,params,optThresholds,breakpoints,breakpointValues, pureRegime) 
+            breakpoints[params][t] = calcBreakpoints(t,params,optThresholds,breakpoints,breakpointValues, pureRegime)
             breakpointValues[params][t] = breakpointValue(params,t,optThresholds,breakpoints,breakpointValues, pureRegime)
 
     return optThresholds[params], breakpoints[params], breakpointValues[params]
@@ -185,7 +185,7 @@ def equilibrium(qH,cH,qL,delta,lam,T):
             option2 =  calcValueBuyer(params,t, policy2, belief,criticalBeliefsNextPeriod,criticalValuesNextPeriod)
             return option1-option2
         return sp.optimize.brentq(calcDifference,low,high)
-    
+
     def calcValueBuyer(params,t, policy, belief,criticalBeliefsNextPeriod,criticalValuesNextPeriod):
         '''t = periods to go'''
         '''qH,qL,cH,lam,delta = params'''
@@ -205,10 +205,10 @@ def equilibrium(qH,cH,qL,delta,lam,T):
             elif beliefCondRejection ==None:
                 #Corresponds to offer of 0 where both types reject
                 #The option where 0 is offered and everyone rejects
-                return lam+delta*U(params,t-1,  belief,criticalBeliefsNextPeriod,criticalValuesNextPeriod) 
+                return lam+delta*U(params,t-1,  belief,criticalBeliefsNextPeriod,criticalValuesNextPeriod)
             else:
                 if belief>beliefCondRejection:
-    #                 return lam+delta*U(params,t-1, belief,criticalBeliefsNextPeriod,criticalValuesNextPeriod) 
+    #                 return lam+delta*U(params,t-1, belief,criticalBeliefsNextPeriod,criticalValuesNextPeriod)
                         return -100
                 alpha = belief/beliefCondRejection
                 return alpha* (lam+delta*U(params,t-1, beliefCondRejection,criticalBeliefsNextPeriod,criticalValuesNextPeriod) ) \
@@ -221,10 +221,10 @@ def equilibrium(qH,cH,qL,delta,lam,T):
         '''policy = tuple of price, belief conditional upon rejection'''
         '''criticalBeliefs is a list of the breakpoints in policy in the next period - needed for calculation of value in enxt period'''
         '''criticalValues is a list of the values at each breakpoint in the next period - needed for calculation of value in enxt period
-            make sure that this one in the Seller function is the list of the Seller's value '''    
+            make sure that this one in the Seller function is the list of the Seller's value '''
         qH,qL,cH,lam,delta = params
         price = policy[0]
-        beliefCondRejection = policy[1]    
+        beliefCondRejection = policy[1]
         try:
             if policy == (cH,None):
                 return cH + delta*qL*V(t-1, sigma(belief,params),criticalBeliefs,criticalValues) \
@@ -246,7 +246,7 @@ def equilibrium(qH,cH,qL,delta,lam,T):
             except TypeError:
                 print(criticalBeliefs,criticalValues,belief)
                 sys.exit('Problem with U')
-                
+
     def V(t,belief,criticalBeliefs,criticalValuesSeller):
         '''t = periods to go - int'''
         '''belief = current belief = float'''
@@ -304,7 +304,7 @@ def equilibrium(qH,cH,qL,delta,lam,T):
 
 
         # determine OptPolicy at each critical point. how to determine critical points?
-        #create a grid. Determine when policy changes and then evaluate where it changes...problem is that within the grid, 
+        #create a grid. Determine when policy changes and then evaluate where it changes...problem is that within the grid,
         # it may change twice, but that seems unlikely
         searchGrid1 = np.linspace(0,criticalBeliefs[t-1][1],10)
         searchGrid2 = np.linspace(criticalBeliefs[t-1][1],1,1000)
@@ -336,16 +336,9 @@ def equilibrium(qH,cH,qL,delta,lam,T):
             if searchGridSellerValue[i] != searchGridSellerValue[i+1]:
                 w = policyChange(params,t, optPolicyGrid[i],optPolicyGrid[i+1], belief,criticalBeliefs[t-1] ,criticalValues[t-1],searchGrid[i],searchGrid[i+1])
                 criticalBeliefs[t].append(w)
-                optPolicy[t].append(optPolicyGrid[i])        
+                optPolicy[t].append(optPolicyGrid[i])
         criticalBeliefs[t].append(1)
         optPolicy[t].append((cH,None))
         criticalValues[t] = [calcValueBuyer(params,t,policy,belief,criticalBeliefs[t-1],criticalValues[t-1]) for policy, belief in zip(optPolicy[t],criticalBeliefs[t])]
         criticalValuesSeller[t] = [calcValueSeller(params,t,policy,belief,criticalBeliefs[t-1],criticalValuesSeller[t-1]) for policy, belief in zip(optPolicy[t],criticalBeliefs[t])]
     return criticalBeliefs, optPolicy, criticalValues,criticalValuesSeller
-
-
-
-
-
-
-
