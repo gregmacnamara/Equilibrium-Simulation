@@ -267,8 +267,9 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
                 return criticalValuesSeller[location]
 #Period T
     #Allow for caclulations to not start at time 0 but to build on each other
+    params = qH,qL,cH,lam,delta
     if equilibriumResults == None:
-        params = qH,qL,cH,lam,delta
+
         optPrices = [0,cH]
         value = list()
         criticalBeliefs = dict()
