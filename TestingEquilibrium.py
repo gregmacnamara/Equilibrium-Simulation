@@ -31,8 +31,9 @@ if __name__ == '__main__':
 			params = qH,qL,cH,lam,delta
 			equilibriumResults[params] = eqSim.equilibrium(qH,cH,qL,delta,lam,T)
 			# criticalBeliefs, optPolicy, criticalValues,criticalValuesSeller = equilibriumResults
-			file_pi = open('equilibriumResults_Grid_T100.pickle', 'w')
+			file_pi = open('equilibriumResults_Grid_T100.pickle', 'wb')
 			pickle.dump(equilibriumResults, file_pi)
+			file_pi.close()
 	# breakpointsDict=dict()
 	# optThresholdsDict = dict()
 	# breakpointValuesDict = dict()
