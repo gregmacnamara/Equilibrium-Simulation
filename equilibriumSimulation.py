@@ -181,7 +181,7 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
             return (lam+cH-qL)/(qH-qL)
         elif qH-cH>qL>lam:
             return cH/(qH-lam)
-    def policyChange(params,t, policy1,policy2, belief,criticalBeliefsNextPeriod,criticalValuesNextPeriod,low,high):
+    def policyChange(params,t, policy1,policy2, criticalBeliefsNextPeriod,criticalValuesNextPeriod,low,high):
         def calcDifference(belief):
             option1 =  calcValueBuyer(params,t, policy1, belief,criticalBeliefsNextPeriod,criticalValuesNextPeriod)
             option2 =  calcValueBuyer(params,t, policy2, belief,criticalBeliefsNextPeriod,criticalValuesNextPeriod)
@@ -238,16 +238,18 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
         except:
                 print(policy)
                 sys.exit(1)
-    def U(params,t,belief,criticalBeliefs,criticalValues):
+    def U(params,t,belief,criticalBeliefs,criticalValues,optPolicy):
         '''the Buyers value function. It either returns 0 as a terminal condition or interpolates the value between known values of a breakpoint '''
         if t==-1:
             return 0
         else:
-            try:
-                return sp.interpolate.interp1d(criticalBeliefs,criticalValues,kind='linear')(belief)/1
-            except TypeError:
-                print(criticalBeliefs,criticalValues,belief)
-                sys.exit('Problem with U')
+            return sp.interpolate.interp1d(criticalBeliefs,criticalValues,kind='linear')(belief)/1
+            # if optPolicy == (0,None):
+            #     ##NEEED TO PASS THE WHOEL dictionary?
+            #     return lam+delta*U(params,t-1,belief,criticalBeliefs,criticalValues,optPolicy)
+            #
+            # else:
+
 
     def V(t,belief,criticalBeliefs,criticalValuesSeller):
         '''t = periods to go - int'''
@@ -339,10 +341,12 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
 
         searchGridSellerValue = list()
         for policy, belief in zip(optPolicyGrid,searchGrid):
-            #The t=1 will not matter because it only is used if the terminal state is reached (t = -1)
-            searchGridSellerValue.append( calcValueSeller(params,1,policy,belief,criticalBeliefs[t-1],criticalValuesSeller[t-1]) )
+            #I replaced t=1 with t-1 which hopefully should  not matter because it only is used if the terminal state is reached (t = -1)
+            searchGridSellerValue.append( calcValueSeller(params,t-1,policy,belief,criticalBeliefs[t-1],criticalValuesSeller[t-1]) )
 
-        #now can determine criticalBeliefs from where policy changes
+        #now can determine criticalBeliefs based on Seller's value. The breakpoint in the Seller's
+        #value is easier to determine because it corresponds to different values rather than different simulateOptIndices
+        #though thye should have the same breakpoints
         criticalBeliefs[t] = [0]
         optPolicy[t] = [(0,None)]
         for i in range(0,len(searchGridSellerValue)-1):
