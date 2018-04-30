@@ -238,12 +238,11 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
         except:
                 print(policy)
                 sys.exit(1)
-    def U(params,t,belief,criticalBeliefs,criticalValues):
+    def U(params,t,belief,criticalBeliefs,criticalValues,optPolicy):
         '''the Buyers value function. It either returns 0 as a terminal condition or interpolates the value between known values of a breakpoint '''
         if t==-1:
             return 0
         else:
-                sys.exit('Problem with U')
             return sp.interpolate.interp1d(criticalBeliefs,criticalValues,kind='linear')(belief)/1
             # if optPolicy == (0,None):
             #     ##NEEED TO PASS THE WHOEL dictionary?
@@ -342,27 +341,19 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
 
         searchGridSellerValue = list()
         for policy, belief in zip(optPolicyGrid,searchGrid):
-<<<<<<< HEAD
             #Changed
             #The t=1 will not matter because it only is used if the terminal state is reached (t = -1)
-            searchGridSellerValue.append( calcValueSeller(params,t-1,policy,belief,criticalBeliefs[t-1],criticalValuesSeller[t-1]) )
-
-        #now can determine criticalBeliefs from changes to Seller's Value
-        #This is easier because Seller has changes in value,while Buyer's changes are to slope
-=======
-            #I replaced t=1 with t-1 which hopefully should  not matter because it only is used if the terminal state is reached (t = -1)
             searchGridSellerValue.append( calcValueSeller(params,t-1,policy,belief,criticalBeliefs[t-1],criticalValuesSeller[t-1]) )
 
         #now can determine criticalBeliefs based on Seller's value. The breakpoint in the Seller's
         #value is easier to determine because it corresponds to different values rather than different simulateOptIndices
         #though thye should have the same breakpoints
->>>>>>> 0c9fdc968bcec4d509f7bdc1d32a9cac7eb14f51
         criticalBeliefs[t] = [0]
         #POTENTIALCHANGE I might want to change this policy to (0,0)
         optPolicy[t] = [(0,None)]
         for i in range(0,len(searchGridSellerValue)-1):
             if searchGridSellerValue[i] != searchGridSellerValue[i+1]:
-                w = policyChange(params,t, optPolicyGrid[i],optPolicyGrid[i+1], belief,criticalBeliefs[t-1] ,criticalValues[t-1],searchGrid[i],searchGrid[i+1])
+                w = policyChange(params,t, optPolicyGrid[i],optPolicyGrid[i+1],criticalBeliefs[t-1] ,criticalValues[t-1],searchGrid[i],searchGrid[i+1])
                 criticalBeliefs[t].append(w)
                 optPolicy[t].append(optPolicyGrid[i])
         criticalBeliefs[t].append(1)
