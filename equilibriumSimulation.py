@@ -339,11 +339,14 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
 
         searchGridSellerValue = list()
         for policy, belief in zip(optPolicyGrid,searchGrid):
+            #Changed
             #The t=1 will not matter because it only is used if the terminal state is reached (t = -1)
-            searchGridSellerValue.append( calcValueSeller(params,1,policy,belief,criticalBeliefs[t-1],criticalValuesSeller[t-1]) )
+            searchGridSellerValue.append( calcValueSeller(params,t-1,policy,belief,criticalBeliefs[t-1],criticalValuesSeller[t-1]) )
 
-        #now can determine criticalBeliefs from where policy changes
+        #now can determine criticalBeliefs from changes to Seller's Value
+        #This is easier because Seller has changes in value,while Buyer's changes are to slope
         criticalBeliefs[t] = [0]
+        #POTENTIALCHANGE I might want to change this policy to (0,0)
         optPolicy[t] = [(0,None)]
         for i in range(0,len(searchGridSellerValue)-1):
             if searchGridSellerValue[i] != searchGridSellerValue[i+1]:
