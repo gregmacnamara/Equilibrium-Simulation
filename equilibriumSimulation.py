@@ -269,6 +269,8 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
                 return criticalValuesSeller[location]
 #Period T
     #Allow for caclulations to not start at time 0 but to build on each other
+    #To do this, we allow for the equilibriumResults to be passed in. If it has not been passed if
+    #then start from 0
     params = qH,qL,cH,lam,delta
     if equilibriumResults == None:
 
@@ -341,7 +343,7 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
 
         searchGridSellerValue = list()
         for policy, belief in zip(optPolicyGrid,searchGrid):
-            #Changed
+            #Changed t=1 to t-1
             #The t=1 will not matter because it only is used if the terminal state is reached (t = -1)
             searchGridSellerValue.append( calcValueSeller(params,t-1,policy,belief,criticalBeliefs[t-1],criticalValuesSeller[t-1]) )
 
