@@ -203,7 +203,7 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
         elif price <cH:
             if belief == 0:
                 #Corresponds what happens when known
-                return qL*sum([delta**i for i in range(t+1)])
+                return max(qL,lam)*sum([delta**i for i in range(t+1)])
             elif beliefCondRejection ==None:
                 #Corresponds to offer of 0 where both types reject
                 #The option where 0 is offered and everyone rejects
@@ -214,7 +214,7 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
                         return -100
                 alpha = belief/beliefCondRejection
                 return alpha* (lam+delta*U(params,t-1, beliefCondRejection,criticalBeliefsNextPeriod,criticalValuesNextPeriod) ) \
-                    +(1-alpha)*(qL*sum([delta**i for i in range(t+1)])-price)
+                    +(1-alpha)*(max(qL,lam)*sum([delta**i for i in range(t+1)])-price)
 
 
     def calcValueSeller(params,t, policy, belief,criticalBeliefs,criticalValues):
@@ -238,7 +238,7 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
         except:
                 print(policy)
                 sys.exit(1)
-    def U(params,t,belief,criticalBeliefs,criticalValues,optPolicy):
+    def U(params,t,belief,criticalBeliefs,criticalValues):
         '''the Buyers value function. It either returns 0 as a terminal condition or interpolates the value between known values of a breakpoint '''
         if t==-1:
             return 0
@@ -271,6 +271,7 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
     #Allow for caclulations to not start at time 0 but to build on each other
     #To do this, we allow for the equilibriumResults to be passed in. If it has not been passed if
     #then start from 0
+    #THIS DOESNT WORK FOR LAM>QL
     params = qH,qL,cH,lam,delta
     if equilibriumResults == None:
 
