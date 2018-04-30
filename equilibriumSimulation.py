@@ -317,7 +317,7 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
 
         # determine OptPolicy at each critical point. how to determine critical points?
         #create a grid. Determine when policy changes and then evaluate where it changes...problem is that within the grid,
-        # it may change twice, but that seems unlikely
+        # it may change twice, but that seems unlikely - though it does happen
         searchGrid1 = np.linspace(0,criticalBeliefs[t-1][1],10)
         searchGrid2 = np.linspace(criticalBeliefs[t-1][1],1,1000)
         searchGrid = np.concatenate((searchGrid1, searchGrid2))
@@ -339,6 +339,7 @@ def equilibrium(qH,cH,qL,delta,lam,T,equilibriumResults=None):
 
         searchGridSellerValue = list()
         for policy, belief in zip(optPolicyGrid,searchGrid):
+            #The t=1 will not matter because it only is used if the terminal state is reached (t = -1)
             searchGridSellerValue.append( calcValueSeller(params,1,policy,belief,criticalBeliefs[t-1],criticalValuesSeller[t-1]) )
 
         #now can determine criticalBeliefs from where policy changes
